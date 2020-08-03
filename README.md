@@ -55,3 +55,5 @@ Goose is a GO Lang based interpreter language created for fun.
 Use commands to try it out
 >>
 ```
+
+For furhter deatils into how to use commans do refer [here](https://github.com/sriharikapu/goose/docs) 
