@@ -5,7 +5,7 @@ import "github.com/sriharikapu/goose/src/literals"
 // Lexer represents a lexer for Goose programming language.
 type Lexer interface {
 	// NextToken returns a next token.
-	NextToken() token.Token
+	NextToken() literals.Token
 }
 
 type lexer struct {
