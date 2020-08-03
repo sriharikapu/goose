@@ -4,7 +4,7 @@ import "github.com/sriharikapu/goose/src/literals"
 
 // Lexer represents a lexer for Goose programming language.
 type Lexer interface {
-	// NextToken returns a next token.
+	// NextToken returns a next literals.
 	NextToken() literals.Token
 }
 
@@ -35,7 +35,7 @@ func (l *lexer) readChar() {
 	l.readPosition++
 }
 
-func (l *lexer) NextToken() token.Token {
+func (l *lexer) NextToken() literals.Token {
 	l.skipWhitespace()
 
 	// skip comments
@@ -43,66 +43,66 @@ func (l *lexer) NextToken() token.Token {
 		l.skipComment()
 	}
 
-	var tok token.Token
+	var tok literals.Token
 	switch l.ch {
 	case '=':
 		if l.peekChar() == '=' {
 			ch := l.ch
 			l.readChar()
-			tok = token.Token{
-				Type:    token.EQ,
+			tok = literals.Token{
+				Type:    literals.EQ,
 				Literal: string(ch) + string(l.ch),
 			}
 		} else {
-			tok = newToken(token.ASSIGN, l.ch)
+			tok = newToken(literals.ASSIGN, l.ch)
 		}
 	case '!':
 		if l.peekChar() == '=' {
 			ch := l.ch
 			l.readChar()
-			tok = token.Token{
-				Type:    token.NEQ,
+			tok = literals.Token{
+				Type:    literals.NEQ,
 				Literal: string(ch) + string(l.ch),
 			}
 		} else {
-			tok = newToken(token.BANG, l.ch)
+			tok = newToken(literals.BANG, l.ch)
 		}
 	case ';':
-		tok = newToken(token.SEMICOLON, l.ch)
+		tok = newToken(literals.SEMICOLON, l.ch)
 	case ':':
-		tok = newToken(token.COLON, l.ch)
+		tok = newToken(literals.COLON, l.ch)
 	case '(':
-		tok = newToken(token.LPAREN, l.ch)
+		tok = newToken(literals.LPAREN, l.ch)
 	case ')':
-		tok = newToken(token.RPAREN, l.ch)
+		tok = newToken(literals.RPAREN, l.ch)
 	case ',':
-		tok = newToken(token.COMMA, l.ch)
+		tok = newToken(literals.COMMA, l.ch)
 	case '+':
-		tok = newToken(token.PLUS, l.ch)
+		tok = newToken(literals.PLUS, l.ch)
 	case '-':
-		tok = newToken(token.MINUS, l.ch)
+		tok = newToken(literals.MINUS, l.ch)
 	case '*':
-		tok = newToken(token.ASTARISK, l.ch)
+		tok = newToken(literals.ASTARISK, l.ch)
 	case '/':
-		tok = newToken(token.SLASH, l.ch)
+		tok = newToken(literals.SLASH, l.ch)
 	case '<':
-		tok = newToken(token.LT, l.ch)
+		tok = newToken(literals.LT, l.ch)
 	case '>':
-		tok = newToken(token.GT, l.ch)
+		tok = newToken(literals.GT, l.ch)
 	case '{':
-		tok = newToken(token.LBRACE, l.ch)
+		tok = newToken(literals.LBRACE, l.ch)
 	case '}':
-		tok = newToken(token.RBRACE, l.ch)
+		tok = newToken(literals.RBRACE, l.ch)
 	case '[':
-		tok = newToken(token.LBRACKET, l.ch)
+		tok = newToken(literals.LBRACKET, l.ch)
 	case ']':
-		tok = newToken(token.RBRACKET, l.ch)
+		tok = newToken(literals.RBRACKET, l.ch)
 	case '"':
-		tok.Type = token.STRING
+		tok.Type = literals.STRING
 		tok.Literal = l.readString()
 	case 0:
 		tok.Literal = ""
-		tok.Type = token.EOF
+		tok.Type = literals.EOF
 	default:
 		if isDigit(l.ch) {
 			return l.readNumberToken()
@@ -110,11 +110,11 @@ func (l *lexer) NextToken() token.Token {
 
 		if isLetter(l.ch) {
 			tok.Literal = l.readIdent()
-			tok.Type = token.LookupIdent(tok.Literal)
+			tok.Type = literals.LookupIdent(tok.Literal)
 			return tok
 		}
 
-		tok = newToken(token.ILLEGAL, l.ch)
+		tok = newToken(literals.ILLEGAL, l.ch)
 	}
 
 	l.readChar()
@@ -168,19 +168,19 @@ func (l *lexer) readNumber() string {
 	return l.read(isDigit)
 }
 
-func (l *lexer) readNumberToken() token.Token {
+func (l *lexer) readNumberToken() literals.Token {
 	intPart := l.readNumber()
 	if l.ch != '.' {
-		return token.Token{
-			Type:    token.INT,
+		return literals.Token{
+			Type:    literals.INT,
 			Literal: intPart,
 		}
 	}
 
 	l.readChar()
 	fracPart := l.readNumber()
-	return token.Token{
-		Type:    token.FLOAT,
+	return literals.Token{
+		Type:    literals.FLOAT,
 		Literal: intPart + "." + fracPart,
 	}
 }
@@ -193,8 +193,8 @@ func isDigit(ch byte) bool {
 	return '0' <= ch && ch <= '9'
 }
 
-func newToken(tokenType token.Type, ch byte) token.Token {
-	return token.Token{
+func newToken(tokenType literals.Type, ch byte) literals.Token {
+	return literals.Token{
 		Type:    tokenType,
 		Literal: string(ch),
 	}
