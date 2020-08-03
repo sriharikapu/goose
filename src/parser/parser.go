@@ -538,13 +538,13 @@ func (p *Parser) parseHashLiteral() ast.Expression {
 func (p *Parser) parseMacroLiteral() ast.Expression {
 	tok := p.curToken
 
-	if !p.expectPeek(token.LPAREN) {
+	if !p.expectPeek(literals.LPAREN) {
 		return nil
 	}
 
 	params := p.parseFunctionParameters()
 
-	if !p.expectPeek(token.LBRACE) {
+	if !p.expectPeek(literals.LBRACE) {
 		return nil
 	}
 
