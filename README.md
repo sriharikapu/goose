@@ -56,4 +56,4 @@ Use commands to try it out
 >>
 ```
 
-For furhter deatils into how to use commans do refer [here](https://github.com/sriharikapu/goose/docs) 
+For furhter deatils into how to use commans do refer [here](https://github.com/sriharikapu/goose/tree/master/docs) 
