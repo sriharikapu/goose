@@ -37,17 +37,17 @@ func convertObjectToASTNode(obj object.Object) ast.Node {
 	switch obj := obj.(type) {
 	case *object.Integer:
 		base := 10
-		t := token.Token{
-			Type:    token.INT,
+		t := literals.Token{
+			Type:    literals.INT,
 			Literal: strconv.FormatInt(obj.Value, base),
 		}
 		return &ast.IntegerLiteral{Token: t, Value: obj.Value}
 	case *object.Boolean:
-		var t token.Token
+		var t literals.Token
 		if obj.Value {
-			t = token.Token{Type: token.TRUE, Literal: "true"}
+			t = literals.Token{Type: literals.TRUE, Literal: "true"}
 		} else {
-			t = token.Token{Type: token.FALSE, Literal: "false"}
+			t = literals.Token{Type: literals.FALSE, Literal: "false"}
 		}
 		return &ast.Boolean{Token: t, Value: obj.Value}
 	case *object.Quote:
