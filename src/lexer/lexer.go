@@ -1,6 +1,6 @@
 package lexer
 
-import "github.com/sriharikapu/goose/src/token"
+import "github.com/sriharikapu/goose/src/literals"
 
 // Lexer represents a lexer for Goose programming language.
 type Lexer interface {
