@@ -6,7 +6,7 @@ import (
 
 	"github.com/sriharikapu/goose/src/ast"
 	"github.com/sriharikapu/goose/src/lexer"
-	"github.com/sriharikapu/goose/src/token"
+	"github.com/sriharikapu/goose/src/literals"
 )
 
 const (
