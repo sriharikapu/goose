@@ -1,6 +1,6 @@
 ### Simple variable declerations
 
-``
+```
 >> let x = 90
 >> x
 90
@@ -16,4 +16,4 @@
 >> let y = 0.0009
 >> y
 0.0009
-``
+```
