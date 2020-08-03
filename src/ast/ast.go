@@ -1,201 +1,514 @@
 package ast
 
-import "github.com/sriharikapu/goose/src/literals"
+import (
+	"bytes"
+	"strings"
 
-// Lexer represents a lexer for Goose programming language.
-type Lexer interface {
-	// NextToken returns a next literals.
-	NextToken() literals.Token
+	"github.com/sriharikapu/goose/src/literals"
+)
+
+// Node represents an AST node.
+type Node interface {
+	TokenLiteral() string
+	String() string
 }
 
-type lexer struct {
-	input string
-	// current position in input (points to current char)
-	position int
-	// current reading position in input (after current char)
-	readPosition int
-	// current char under examination
-	ch byte
+// Statement represents a statement.
+type Statement interface {
+	Node
+	statementNode()
 }
 
-// New returns a new Lexer.
-func New(input string) Lexer {
-	l := &lexer{input: input}
-	l.readChar()
-	return l
+// Expression represents an expression.
+type Expression interface {
+	Node
+	expressionNode()
 }
 
-func (l *lexer) readChar() {
-	if l.readPosition >= len(l.input) {
-		l.ch = 0
-	} else {
-		l.ch = l.input[l.readPosition]
+// Program is a top-level AST node of a program.
+type Program struct {
+	Statements []Statement
+}
+
+// TokenLiteral returns the first token literal of a program.
+func (p *Program) TokenLiteral() string {
+	if len(p.Statements) == 0 {
+		return ""
 	}
-	l.position = l.readPosition
-	l.readPosition++
+	return p.Statements[0].TokenLiteral()
 }
 
-func (l *lexer) NextToken() literals.Token {
-	l.skipWhitespace()
+func (p *Program) String() string {
+	var out bytes.Buffer
 
-	// skip comments
-	if l.ch == '/' && l.peekChar() == '/' {
-		l.skipComment()
-	}
-
-	var tok literals.Token
-	switch l.ch {
-	case '=':
-		if l.peekChar() == '=' {
-			ch := l.ch
-			l.readChar()
-			tok = literals.Token{
-				Type:    literals.EQ,
-				Literal: string(ch) + string(l.ch),
-			}
-		} else {
-			tok = newToken(literals.ASSIGN, l.ch)
-		}
-	case '!':
-		if l.peekChar() == '=' {
-			ch := l.ch
-			l.readChar()
-			tok = literals.Token{
-				Type:    literals.NEQ,
-				Literal: string(ch) + string(l.ch),
-			}
-		} else {
-			tok = newToken(literals.BANG, l.ch)
-		}
-	case ';':
-		tok = newToken(literals.SEMICOLON, l.ch)
-	case ':':
-		tok = newToken(literals.COLON, l.ch)
-	case '(':
-		tok = newToken(literals.LPAREN, l.ch)
-	case ')':
-		tok = newToken(literals.RPAREN, l.ch)
-	case ',':
-		tok = newToken(literals.COMMA, l.ch)
-	case '+':
-		tok = newToken(literals.PLUS, l.ch)
-	case '-':
-		tok = newToken(literals.MINUS, l.ch)
-	case '*':
-		tok = newToken(literals.ASTARISK, l.ch)
-	case '/':
-		tok = newToken(literals.SLASH, l.ch)
-	case '<':
-		tok = newToken(literals.LT, l.ch)
-	case '>':
-		tok = newToken(literals.GT, l.ch)
-	case '{':
-		tok = newToken(literals.LBRACE, l.ch)
-	case '}':
-		tok = newToken(literals.RBRACE, l.ch)
-	case '[':
-		tok = newToken(literals.LBRACKET, l.ch)
-	case ']':
-		tok = newToken(literals.RBRACKET, l.ch)
-	case '"':
-		tok.Type = literals.STRING
-		tok.Literal = l.readString()
-	case 0:
-		tok.Literal = ""
-		tok.Type = literals.EOF
-	default:
-		if isDigit(l.ch) {
-			return l.readNumberToken()
-		}
-
-		if isLetter(l.ch) {
-			tok.Literal = l.readIdent()
-			tok.Type = literals.LookupIdent(tok.Literal)
-			return tok
-		}
-
-		tok = newToken(literals.ILLEGAL, l.ch)
+	for _, s := range p.Statements {
+		out.WriteString(s.String())
 	}
 
-	l.readChar()
-	return tok
+	return out.String()
 }
 
-func (l *lexer) skipWhitespace() {
-	for l.ch == ' ' || l.ch == '\t' || l.ch == '\n' || l.ch == '\r' {
-		l.readChar()
-	}
+// LetStatement represents a let statement.
+type LetStatement struct {
+	Token literals.Token // the literals.LET token
+	Name  *Ident
+	Value Expression
 }
 
-func (l *lexer) skipComment() {
-	for l.ch != '\n' && l.ch != '\r' {
-		l.readChar()
-	}
-	l.skipWhitespace()
+func (ls *LetStatement) statementNode() {}
+
+// TokenLiteral returns a token literal of let statement.
+func (ls *LetStatement) TokenLiteral() string {
+	return ls.Token.Literal
 }
 
-func (l *lexer) peekChar() byte {
-	if l.readPosition >= len(l.input) {
-		return 0
-	}
-	return l.input[l.readPosition]
-}
+func (ls *LetStatement) String() string {
+	var out bytes.Buffer
 
-func (l *lexer) readString() string {
-	position := l.position + 1
-	for {
-		l.readChar()
-		if l.ch == '"' || l.ch == 0 {
-			break
-		}
-	}
-	return l.input[position:l.position]
-}
+	out.WriteString(ls.TokenLiteral() + " ")
+	out.WriteString(ls.Name.String())
+	out.WriteString(" = ")
 
-func (l *lexer) read(checkFn func(byte) bool) string {
-	position := l.position
-	for checkFn(l.ch) {
-		l.readChar()
-	}
-	return l.input[position:l.position]
-}
-
-func (l *lexer) readIdent() string {
-	return l.read(isLetter)
-}
-
-func (l *lexer) readNumber() string {
-	return l.read(isDigit)
-}
-
-func (l *lexer) readNumberToken() literals.Token {
-	intPart := l.readNumber()
-	if l.ch != '.' {
-		return literals.Token{
-			Type:    literals.INT,
-			Literal: intPart,
-		}
+	if ls.Value != nil {
+		out.WriteString(ls.Value.String())
 	}
 
-	l.readChar()
-	fracPart := l.readNumber()
-	return literals.Token{
-		Type:    literals.FLOAT,
-		Literal: intPart + "." + fracPart,
+	out.WriteString(";")
+
+	return out.String()
+}
+
+// Ident represents an identifier.
+type Ident struct {
+	Token literals.Token // the literals.IDENT token
+	Value string
+}
+
+func (i *Ident) expressionNode() {}
+
+// TokenLiteral returns a token literal of an identifier.
+func (i *Ident) TokenLiteral() string {
+	return i.Token.Literal
+}
+
+func (i *Ident) String() string {
+	return i.Value
+}
+
+// ReturnStatement represents a return statement.
+type ReturnStatement struct {
+	Token       literals.Token // the literals.RETURN token
+	ReturnValue Expression
+}
+
+func (rs *ReturnStatement) statementNode() {}
+
+// TokenLiteral returns a token literal of return statement.
+func (rs *ReturnStatement) TokenLiteral() string {
+	return rs.Token.Literal
+}
+
+func (rs *ReturnStatement) String() string {
+	var out bytes.Buffer
+
+	out.WriteString(rs.TokenLiteral() + " ")
+
+	if rs.ReturnValue != nil {
+		out.WriteString(rs.ReturnValue.String())
 	}
+
+	out.WriteString(";")
+
+	return out.String()
 }
 
-func isLetter(ch byte) bool {
-	return 'a' <= ch && ch <= 'z' || 'A' <= ch && ch <= 'Z' || ch == '_'
+// ExpressionStatement represents an expression statement.
+type ExpressionStatement struct {
+	Token      literals.Token // the first token of the expression
+	Expression Expression
 }
 
-func isDigit(ch byte) bool {
-	return '0' <= ch && ch <= '9'
+func (es *ExpressionStatement) statementNode() {}
+
+// TokenLiteral returns a token literal of expression statement.
+func (es *ExpressionStatement) TokenLiteral() string {
+	return es.Token.Literal
 }
 
-func newToken(tokenType literals.Type, ch byte) literals.Token {
-	return literals.Token{
-		Type:    tokenType,
-		Literal: string(ch),
+func (es *ExpressionStatement) String() string {
+	if es.Expression != nil {
+		return es.Expression.String()
 	}
+
+	return ""
+}
+
+// IntegerLiteral represents an integer literal.
+type IntegerLiteral struct {
+	Token literals.Token
+	Value int64
+}
+
+func (il *IntegerLiteral) expressionNode() {}
+
+// TokenLiteral returns a token literal of integer.
+func (il *IntegerLiteral) TokenLiteral() string {
+	return il.Token.Literal
+}
+
+func (il *IntegerLiteral) String() string {
+	return il.Token.Literal
+}
+
+// FloatLiteral represents a floating point number literal.
+type FloatLiteral struct {
+	Token literals.Token
+	Value float64
+}
+
+func (fl *FloatLiteral) expressionNode() {}
+
+// TokenLiteral returns a token literal of floating point number.
+func (fl *FloatLiteral) TokenLiteral() string {
+	return fl.Token.Literal
+}
+
+func (fl *FloatLiteral) String() string {
+	return fl.Token.Literal
+}
+
+// PrefixExpression represents a prefix expression.
+type PrefixExpression struct {
+	Token    literals.Token // The prefix token, e.g. !
+	Operator string
+	Right    Expression
+}
+
+func (pe *PrefixExpression) expressionNode() {}
+
+// TokenLiteral returns a token literal.
+func (pe *PrefixExpression) TokenLiteral() string {
+	return pe.Token.Literal
+}
+
+func (pe *PrefixExpression) String() string {
+	var out bytes.Buffer
+
+	out.WriteString("(")
+	out.WriteString(pe.Operator)
+	out.WriteString(pe.Right.String())
+	out.WriteString(")")
+
+	return out.String()
+}
+
+// InfixExpression represents an infix expression.
+type InfixExpression struct {
+	Token    literals.Token // The operator token, e.g. +
+	Left     Expression
+	Operator string
+	Right    Expression
+}
+
+func (ie *InfixExpression) expressionNode() {}
+
+// TokenLiteral returns a token literal.
+func (ie *InfixExpression) TokenLiteral() string {
+	return ie.Token.Literal
+}
+
+func (ie *InfixExpression) String() string {
+	var out bytes.Buffer
+
+	out.WriteString("(")
+	out.WriteString(ie.Left.String())
+	out.WriteString(" " + ie.Operator + " ")
+	out.WriteString(ie.Right.String())
+	out.WriteString(")")
+
+	return out.String()
+}
+
+// Boolean represents a boolean value.
+type Boolean struct {
+	Token literals.Token
+	Value bool
+}
+
+func (b *Boolean) expressionNode() {}
+
+// TokenLiteral returns a token literal of boolean value.
+func (b *Boolean) TokenLiteral() string {
+	return b.Token.Literal
+}
+
+func (b *Boolean) String() string {
+	return b.Token.Literal
+}
+
+// IfExpression represents an if expression.
+type IfExpression struct {
+	Token       literals.Token // The 'if' token
+	Condition   Expression
+	Consequence *BlockStatement
+	Alternative *BlockStatement
+}
+
+func (ie *IfExpression) expressionNode() {}
+
+// TokenLiteral returns a token literal of if expression.
+func (ie *IfExpression) TokenLiteral() string {
+	return ie.Token.Literal
+}
+
+func (ie *IfExpression) String() string {
+	var out bytes.Buffer
+
+	out.WriteString("if")
+	out.WriteString(ie.Condition.String())
+	out.WriteString(" ")
+	out.WriteString(ie.Consequence.String())
+
+	if ie.Alternative != nil {
+		out.WriteString("else ")
+		out.WriteString(ie.Alternative.String())
+	}
+
+	return out.String()
+}
+
+// BlockStatement represents a block statement.
+type BlockStatement struct {
+	Token      literals.Token // the '{' token
+	Statements []Statement
+}
+
+func (bs *BlockStatement) expressionNode() {}
+
+// TokenLiteral returns a token literal of block statement.
+func (bs *BlockStatement) TokenLiteral() string {
+	return bs.Token.Literal
+}
+
+func (bs *BlockStatement) String() string {
+	var out bytes.Buffer
+
+	for _, s := range bs.Statements {
+		out.WriteString(s.String())
+	}
+
+	return out.String()
+}
+
+// FunctionLiteral represents a fuction literal.
+type FunctionLiteral struct {
+	Token      literals.Token
+	Parameters []*Ident
+	Body       *BlockStatement
+}
+
+func (fl *FunctionLiteral) expressionNode() {}
+
+// TokenLiteral returns a token literal of function.
+func (fl *FunctionLiteral) TokenLiteral() string {
+	return fl.Token.Literal
+}
+
+func (fl *FunctionLiteral) String() string {
+	var out bytes.Buffer
+
+	params := make([]string, 0, len(fl.Parameters))
+	for _, p := range fl.Parameters {
+		params = append(params, p.String())
+	}
+
+	out.WriteString(fl.TokenLiteral())
+	out.WriteString("(")
+	out.WriteString(strings.Join(params, ", "))
+	out.WriteString(") ")
+	out.WriteString(fl.Body.String())
+
+	return out.String()
+}
+
+// CallExpression represents a function call expression.
+type CallExpression struct {
+	Token     literals.Token // the '(' token
+	Function  Expression  // Ident or FunctionLiteral
+	Arguments []Expression
+}
+
+func (ce *CallExpression) expressionNode() {}
+
+// TokenLiteral returns a token literal of function call expression.
+func (ce *CallExpression) TokenLiteral() string {
+	return ce.Token.Literal
+}
+
+func (ce *CallExpression) String() string {
+	var out bytes.Buffer
+
+	args := make([]string, 0, len(ce.Arguments))
+	for _, arg := range ce.Arguments {
+		args = append(args, arg.String())
+	}
+
+	out.WriteString(ce.Function.String())
+	out.WriteString("(")
+	out.WriteString(strings.Join(args, ", "))
+	out.WriteString(")")
+
+	return out.String()
+}
+
+// StringLiteral represents a string literal.
+type StringLiteral struct {
+	Token literals.Token
+	Value string
+}
+
+func (sl *StringLiteral) expressionNode() {}
+
+// TokenLiteral returns a token literal of string.
+func (sl *StringLiteral) TokenLiteral() string {
+	if sl == nil {
+		return ""
+	}
+	return sl.Token.Literal
+}
+
+func (sl *StringLiteral) String() string {
+	return sl.TokenLiteral()
+}
+
+// ArrayLiteral represents an array literal.
+type ArrayLiteral struct {
+	Token    literals.Token // the '[' token
+	Elements []Expression
+}
+
+func (*ArrayLiteral) expressionNode() {}
+
+// TokenLiteral returns a token literal of array.
+func (al *ArrayLiteral) TokenLiteral() string {
+	if al == nil {
+		return ""
+	}
+	return al.Token.Literal
+}
+
+func (al *ArrayLiteral) String() string {
+	if al == nil {
+		return ""
+	}
+
+	elements := make([]string, 0, len(al.Elements))
+	for _, el := range al.Elements {
+		elements = append(elements, el.String())
+	}
+
+	var out bytes.Buffer
+
+	out.WriteString("[")
+	out.WriteString(strings.Join(elements, ", "))
+	out.WriteString("]")
+
+	return out.String()
+}
+
+// IndexExpression represents an expression in array index operator.
+type IndexExpression struct {
+	Token literals.Token // the '[' token
+	Left  Expression
+	Index Expression
+}
+
+func (*IndexExpression) expressionNode() {}
+
+// TokenLiteral returns a token literal of array.
+func (ie *IndexExpression) TokenLiteral() string {
+	if ie == nil {
+		return ""
+	}
+	return ie.Token.Literal
+}
+
+func (ie *IndexExpression) String() string {
+	if ie == nil {
+		return ""
+	}
+
+	var out bytes.Buffer
+
+	out.WriteString("(")
+	out.WriteString(ie.Left.String())
+	out.WriteString("[")
+	out.WriteString(ie.Index.String())
+	out.WriteString("])")
+
+	return out.String()
+}
+
+// HashLiteral represents a hash literal.
+type HashLiteral struct {
+	Token literals.Token // the '{' token
+	Pairs map[Expression]Expression
+}
+
+func (*HashLiteral) expressionNode() {}
+
+// TokenLiteral returns a token literal of hash.
+func (hl *HashLiteral) TokenLiteral() string {
+	if hl == nil {
+		return ""
+	}
+	return hl.Token.Literal
+}
+
+func (hl *HashLiteral) String() string {
+	if hl == nil {
+		return ""
+	}
+
+	pairs := make([]string, len(hl.Pairs))
+	for key, value := range hl.Pairs {
+		pairs = append(pairs, key.String()+": "+value.String())
+	}
+
+	var out bytes.Buffer
+	out.WriteString("{")
+	out.WriteString(strings.Join(pairs, ", "))
+	out.WriteString("}")
+	return out.String()
+}
+
+// MacroLiteral represents a macro literal.
+type MacroLiteral struct {
+	Token      literals.Token
+	Parameters []*Ident
+	Body       *BlockStatement
+}
+
+func (ml *MacroLiteral) expressionNode() {}
+
+// TokenLiteral returns a token literal of function.
+func (ml *MacroLiteral) TokenLiteral() string {
+	return ml.Token.Literal
+}
+
+func (ml *MacroLiteral) String() string {
+	var out bytes.Buffer
+
+	params := make([]string, 0, len(ml.Parameters))
+	for _, p := range ml.Parameters {
+		params = append(params, p.String())
+	}
+
+	out.WriteString(ml.TokenLiteral())
+	out.WriteString("(")
+	out.WriteString(strings.Join(params, ", "))
+	out.WriteString(") ")
+	out.WriteString(ml.Body.String())
+
+	return out.String()
 }
