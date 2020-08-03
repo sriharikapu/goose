@@ -1,4 +1,4 @@
-package lexer
+package ast
 
 import "github.com/sriharikapu/goose/src/literals"
 
