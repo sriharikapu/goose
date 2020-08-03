@@ -450,7 +450,7 @@ func (ie *IndexExpression) String() string {
 
 // HashLiteral represents a hash literal.
 type HashLiteral struct {
-	Token token.Token // the '{' token
+	Token literals.Token // the '{' token
 	Pairs map[Expression]Expression
 }
 
