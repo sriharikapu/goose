@@ -49,7 +49,7 @@ func (p *Program) String() string {
 
 // LetStatement represents a let statement.
 type LetStatement struct {
-	Token token.Token // the token.LET token
+	Token literals.Token // the literals.LET token
 	Name  *Ident
 	Value Expression
 }
@@ -58,7 +58,7 @@ func (ls *LetStatement) statementNode() {}
 
 // TokenLiteral returns a token literal of let statement.
 func (ls *LetStatement) TokenLiteral() string {
-	return ls.Token.Literal
+	return ls.literals.Literal
 }
 
 func (ls *LetStatement) String() string {
@@ -79,7 +79,7 @@ func (ls *LetStatement) String() string {
 
 // Ident represents an identifier.
 type Ident struct {
-	Token token.Token // the token.IDENT token
+	Token literals.Token // the literals.IDENT token
 	Value string
 }
 
@@ -87,7 +87,7 @@ func (i *Ident) expressionNode() {}
 
 // TokenLiteral returns a token literal of an identifier.
 func (i *Ident) TokenLiteral() string {
-	return i.Token.Literal
+	return i.literals.Literal
 }
 
 func (i *Ident) String() string {
@@ -96,7 +96,7 @@ func (i *Ident) String() string {
 
 // ReturnStatement represents a return statement.
 type ReturnStatement struct {
-	Token       token.Token // the token.RETURN token
+	Token       literals.Token // the literals.RETURN token
 	ReturnValue Expression
 }
 
@@ -104,7 +104,7 @@ func (rs *ReturnStatement) statementNode() {}
 
 // TokenLiteral returns a token literal of return statement.
 func (rs *ReturnStatement) TokenLiteral() string {
-	return rs.Token.Literal
+	return rs.literals.Literal
 }
 
 func (rs *ReturnStatement) String() string {
@@ -123,7 +123,7 @@ func (rs *ReturnStatement) String() string {
 
 // ExpressionStatement represents an expression statement.
 type ExpressionStatement struct {
-	Token      token.Token // the first token of the expression
+	Token      literals.Token // the first token of the expression
 	Expression Expression
 }
 
@@ -131,7 +131,7 @@ func (es *ExpressionStatement) statementNode() {}
 
 // TokenLiteral returns a token literal of expression statement.
 func (es *ExpressionStatement) TokenLiteral() string {
-	return es.Token.Literal
+	return es.literals.Literal
 }
 
 func (es *ExpressionStatement) String() string {
@@ -144,7 +144,7 @@ func (es *ExpressionStatement) String() string {
 
 // IntegerLiteral represents an integer literal.
 type IntegerLiteral struct {
-	Token token.Token
+	Token literals.Token
 	Value int64
 }
 
@@ -152,16 +152,16 @@ func (il *IntegerLiteral) expressionNode() {}
 
 // TokenLiteral returns a token literal of integer.
 func (il *IntegerLiteral) TokenLiteral() string {
-	return il.Token.Literal
+	return il.literals.Literal
 }
 
 func (il *IntegerLiteral) String() string {
-	return il.Token.Literal
+	return il.literals.Literal
 }
 
 // FloatLiteral represents a floating point number literal.
 type FloatLiteral struct {
-	Token token.Token
+	Token literals.Token
 	Value float64
 }
 
@@ -169,16 +169,16 @@ func (fl *FloatLiteral) expressionNode() {}
 
 // TokenLiteral returns a token literal of floating point number.
 func (fl *FloatLiteral) TokenLiteral() string {
-	return fl.Token.Literal
+	return fl.literals.Literal
 }
 
 func (fl *FloatLiteral) String() string {
-	return fl.Token.Literal
+	return fl.literals.Literal
 }
 
 // PrefixExpression represents a prefix expression.
 type PrefixExpression struct {
-	Token    token.Token // The prefix token, e.g. !
+	Token    literals.Token // The prefix token, e.g. !
 	Operator string
 	Right    Expression
 }
@@ -187,7 +187,7 @@ func (pe *PrefixExpression) expressionNode() {}
 
 // TokenLiteral returns a token literal.
 func (pe *PrefixExpression) TokenLiteral() string {
-	return pe.Token.Literal
+	return pe.literals.Literal
 }
 
 func (pe *PrefixExpression) String() string {
@@ -203,7 +203,7 @@ func (pe *PrefixExpression) String() string {
 
 // InfixExpression represents an infix expression.
 type InfixExpression struct {
-	Token    token.Token // The operator token, e.g. +
+	Token    literals.Token // The operator token, e.g. +
 	Left     Expression
 	Operator string
 	Right    Expression
@@ -213,7 +213,7 @@ func (ie *InfixExpression) expressionNode() {}
 
 // TokenLiteral returns a token literal.
 func (ie *InfixExpression) TokenLiteral() string {
-	return ie.Token.Literal
+	return ie.literals.Literal
 }
 
 func (ie *InfixExpression) String() string {
@@ -230,7 +230,7 @@ func (ie *InfixExpression) String() string {
 
 // Boolean represents a boolean value.
 type Boolean struct {
-	Token token.Token
+	Token literals.Token
 	Value bool
 }
 
@@ -238,16 +238,16 @@ func (b *Boolean) expressionNode() {}
 
 // TokenLiteral returns a token literal of boolean value.
 func (b *Boolean) TokenLiteral() string {
-	return b.Token.Literal
+	return b.literals.Literal
 }
 
 func (b *Boolean) String() string {
-	return b.Token.Literal
+	return b.literals.Literal
 }
 
 // IfExpression represents an if expression.
 type IfExpression struct {
-	Token       token.Token // The 'if' token
+	Token       literals.Token // The 'if' token
 	Condition   Expression
 	Consequence *BlockStatement
 	Alternative *BlockStatement
@@ -257,7 +257,7 @@ func (ie *IfExpression) expressionNode() {}
 
 // TokenLiteral returns a token literal of if expression.
 func (ie *IfExpression) TokenLiteral() string {
-	return ie.Token.Literal
+	return ie.literals.Literal
 }
 
 func (ie *IfExpression) String() string {
@@ -278,7 +278,7 @@ func (ie *IfExpression) String() string {
 
 // BlockStatement represents a block statement.
 type BlockStatement struct {
-	Token      token.Token // the '{' token
+	Token      literals.Token // the '{' token
 	Statements []Statement
 }
 
@@ -286,7 +286,7 @@ func (bs *BlockStatement) expressionNode() {}
 
 // TokenLiteral returns a token literal of block statement.
 func (bs *BlockStatement) TokenLiteral() string {
-	return bs.Token.Literal
+	return bs.literals.Literal
 }
 
 func (bs *BlockStatement) String() string {
@@ -301,7 +301,7 @@ func (bs *BlockStatement) String() string {
 
 // FunctionLiteral represents a fuction literal.
 type FunctionLiteral struct {
-	Token      token.Token
+	Token      literals.Token
 	Parameters []*Ident
 	Body       *BlockStatement
 }
@@ -310,7 +310,7 @@ func (fl *FunctionLiteral) expressionNode() {}
 
 // TokenLiteral returns a token literal of function.
 func (fl *FunctionLiteral) TokenLiteral() string {
-	return fl.Token.Literal
+	return fl.literals.Literal
 }
 
 func (fl *FunctionLiteral) String() string {
@@ -332,7 +332,7 @@ func (fl *FunctionLiteral) String() string {
 
 // CallExpression represents a function call expression.
 type CallExpression struct {
-	Token     token.Token // the '(' token
+	Token     literals.Token // the '(' token
 	Function  Expression  // Ident or FunctionLiteral
 	Arguments []Expression
 }
@@ -341,7 +341,7 @@ func (ce *CallExpression) expressionNode() {}
 
 // TokenLiteral returns a token literal of function call expression.
 func (ce *CallExpression) TokenLiteral() string {
-	return ce.Token.Literal
+	return ce.literals.Literal
 }
 
 func (ce *CallExpression) String() string {
@@ -362,7 +362,7 @@ func (ce *CallExpression) String() string {
 
 // StringLiteral represents a string literal.
 type StringLiteral struct {
-	Token token.Token
+	Token literals.Token
 	Value string
 }
 
@@ -373,7 +373,7 @@ func (sl *StringLiteral) TokenLiteral() string {
 	if sl == nil {
 		return ""
 	}
-	return sl.Token.Literal
+	return sl.literals.Literal
 }
 
 func (sl *StringLiteral) String() string {
@@ -382,7 +382,7 @@ func (sl *StringLiteral) String() string {
 
 // ArrayLiteral represents an array literal.
 type ArrayLiteral struct {
-	Token    token.Token // the '[' token
+	Token    literals.Token // the '[' token
 	Elements []Expression
 }
 
@@ -393,7 +393,7 @@ func (al *ArrayLiteral) TokenLiteral() string {
 	if al == nil {
 		return ""
 	}
-	return al.Token.Literal
+	return al.literals.Literal
 }
 
 func (al *ArrayLiteral) String() string {
@@ -417,7 +417,7 @@ func (al *ArrayLiteral) String() string {
 
 // IndexExpression represents an expression in array index operator.
 type IndexExpression struct {
-	Token token.Token // the '[' token
+	Token literals.Token // the '[' token
 	Left  Expression
 	Index Expression
 }
@@ -429,7 +429,7 @@ func (ie *IndexExpression) TokenLiteral() string {
 	if ie == nil {
 		return ""
 	}
-	return ie.Token.Literal
+	return ie.literals.Literal
 }
 
 func (ie *IndexExpression) String() string {
@@ -461,7 +461,7 @@ func (hl *HashLiteral) TokenLiteral() string {
 	if hl == nil {
 		return ""
 	}
-	return hl.Token.Literal
+	return hl.literals.Literal
 }
 
 func (hl *HashLiteral) String() string {
