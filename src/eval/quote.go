@@ -5,7 +5,7 @@ import (
 
 	"github.com/sriharikapu/goose/src/ast"
 	"github.com/sriharikapu/goose/src/object"
-	"github.com/sriharikapu/goose/src/token"
+	"github.com/sriharikapu/goose/src/literals"
 )
 
 const (
